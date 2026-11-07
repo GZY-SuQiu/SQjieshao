@@ -1,0 +1,1896 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SQ 密钥授权系统 · 软件授权与卡密管理平台</title>
+    <meta
+      name="description"
+      content="SQ 密钥授权系统：四端程序、密钥生命周期、设备绑定、离线激活、邮箱账号、告警规则与多渠道通知。单机 SQLite 部署，数据留在自己手里。"
+    />
+    <meta name="theme-color" content="#f4f6fa" />
+    <!-- 部署后请把下面三处 example.pages.dev 换成你的实际域名 -->
+    <link rel="canonical" href="https://example.pages.dev/" />
+    <meta property="og:title" content="SQ 密钥授权系统 · 软件授权与卡密管理平台" />
+    <meta
+      property="og:description"
+      content="从签发到告警，一套系统管到底。四端程序、密钥生命周期、离线激活、完整性自校验与告警规则引擎。"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://example.pages.dev/" />
+    <meta property="og:site_name" content="SQ 密钥授权系统" />
+    <meta property="og:image" content="./assets/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SQ 密钥授权系统 · 软件授权与卡密管理平台" />
+    <meta name="twitter:image" content="./assets/og-cover.png" />
+    <link rel="icon" href="./assets/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./theme-init.js"></script>
+  </head>
+  <body>
+    <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-key" viewBox="0 0 24 24">
+        <circle cx="8" cy="8" r="4"></circle>
+        <path d="M11 11 21 21"></path>
+        <path d="M17 17l2-2"></path>
+        <path d="M20 20l1.5-1.5"></path>
+      </symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24">
+        <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+        <rect x="10" y="10" width="4" height="4"></rect>
+        <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"></path>
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path d="M12 3l7 3v5c0 4.5-2.9 8.2-7 10-4.1-1.8-7-5.5-7-10V6z"></path>
+        <path d="M9 12l2 2 4-4"></path>
+      </symbol>
+      <symbol id="i-bell" viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+        <path d="M10 21h4"></path>
+      </symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+        <path d="M2 7l10 6L22 7"></path>
+      </symbol>
+      <symbol id="i-server" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="7" rx="2"></rect>
+        <rect x="3" y="14" width="18" height="7" rx="2"></rect>
+        <path d="M7 6.5h.01M7 17.5h.01"></path>
+      </symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="13" rx="2"></rect>
+        <path d="M9 21h6M12 17v4"></path>
+      </symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24">
+        <path d="M3 7l4 4 5-6 5 6 4-4-2 11H5z"></path>
+        <path d="M5 21h14"></path>
+      </symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24">
+        <rect x="6" y="2" width="12" height="20" rx="3"></rect>
+        <path d="M11 18h2"></path>
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24">
+        <path d="M4 12.5l5 5L20 6.5"></path>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h16M13 5l7 7-7 7"></path>
+      </symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24">
+        <path d="M3 6h18M3 12h18M3 18h18"></path>
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="12" height="12" rx="2"></rect>
+        <path d="M5 15V5a2 2 0 0 1 2-2h10"></path>
+      </symbol>
+      <symbol id="i-terminal" viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+        <path d="M6 9l3 3-3 3M12 15h6"></path>
+      </symbol>
+      <symbol id="i-db" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="8" ry="3"></ellipse>
+        <path d="M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5"></path>
+        <path d="M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7"></path>
+      </symbol>
+      <symbol id="i-backup" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.3-5.7"></path>
+        <path d="M20 3v5h-5"></path>
+        <path d="M12 8v4l3 2"></path>
+      </symbol>
+      <symbol id="i-plug" viewBox="0 0 24 24">
+        <path d="M9 3v6M15 3v6"></path>
+        <path d="M6 9h12v3a6 6 0 0 1-12 0z"></path>
+        <path d="M12 18v3"></path>
+      </symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24">
+        <path d="M12 3l9 16H3z"></path>
+        <path d="M12 9v5M12 17h.01"></path>
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path>
+      </symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24">
+        <rect x="4" y="10" width="16" height="11" rx="2"></rect>
+        <path d="M8 10V7a4 4 0 1 1 8 0v3"></path>
+      </symbol>
+      <symbol id="i-file" viewBox="0 0 24 24">
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+        <path d="M14 3v5h5M9 13h6M9 17h6"></path>
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24">
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path>
+      </symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M3 12h18M12 3c3 3.5 3 14.5 0 18-3-3.5-3-14.5 0-18z"></path>
+      </symbol>
+      <symbol id="i-question" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 1-1 1.7M12 17h.01"></path>
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24">
+        <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"></path>
+      </symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24">
+        <path d="M6 9l6 6 6-6"></path>
+      </symbol>
+    </svg>
+
+    <header class="site-header" id="top">
+      <div class="beta-bar">
+        <div class="shell beta-inner">
+          <span class="beta-dot"></span>
+          <b>测试与调试阶段</b>
+          <span class="beta-text">v1.0.0 Beta · 功能与接口仍在联调，正式发布前请以 release_package 为准</span>
+        </div>
+      </div>
+      <div class="shell header-row">
+        <a class="brand" href="#top" aria-label="SQ 密钥授权系统">
+          <img src="./assets/logo.svg" alt="" width="40" height="40" />
+          <span>
+            <strong>SQ AUTH</strong>
+            <small>密钥授权系统</small>
+          </span>
+        </a>
+        <nav class="nav" id="nav" aria-label="主导航">
+          <a href="#suite">四端产品</a>
+          <a href="#features">全功能</a>
+          <a href="#playground">交互演示</a>
+          <a href="#studio">全景模拟</a>
+          <a href="#cinema">3D 观影</a>
+          <a href="#immersive">4D 全景</a>
+          <a href="#security">安全体系</a>
+          <a href="#contact">联系</a>
+        </nav>
+        <div class="header-cta">
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换深浅主题" title="切换深浅主题">
+            <svg class="icon-sun"><use href="#i-sun"></use></svg>
+            <svg class="icon-moon"><use href="#i-moon"></use></svg>
+          </button>
+          <a class="btn btn-ink" href="#deploy">部署到服务器</a>
+          <button class="nav-toggle" id="nav-toggle" aria-label="打开导航" aria-expanded="false">
+            <svg><use href="#i-menu"></use></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <aside class="rail" aria-label="章节索引">
+      <a href="#suite" data-rail="suite"><i>01</i><span>四端产品</span></a>
+      <a href="#features" data-rail="features"><i>02</i><span>全功能矩阵</span></a>
+      <a href="#playground" data-rail="playground"><i>03</i><span>交互演示</span></a>
+      <a href="#studio" data-rail="studio"><i>04</i><span>软件全景</span></a>
+      <a href="#cinema" data-rail="cinema"><i>05</i><span>3D 观影</span></a>
+      <a href="#immersive" data-rail="immersive"><i>06</i><span>4D 全景</span></a>
+      <a href="#security" data-rail="security"><i>07</i><span>安全体系</span></a>
+      <a href="#alerts" data-rail="alerts"><i>08</i><span>告警通知</span></a>
+      <a href="#accounts" data-rail="accounts"><i>09</i><span>账号用户</span></a>
+      <a href="#deploy" data-rail="deploy"><i>10</i><span>部署运维</span></a>
+      <a href="#integration" data-rail="integration"><i>11</i><span>接入扩展</span></a>
+      <a href="#faq" data-rail="faq"><i>12</i><span>常见问题</span></a>
+      <a href="#author" data-rail="author"><i>13</i><span>作者</span></a>
+      <a href="#contact" data-rail="contact"><i>14</i><span>联系</span></a>
+    </aside>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="hero">
+        <canvas class="fx-canvas" id="fx-canvas" aria-hidden="true"></canvas>
+        <div class="shell hero-grid">
+          <div class="hero-copy">
+            <p class="kicker">SQ AUTHORIZATION SYSTEM · v1.0.0 BETA · TESTING &amp; DEBUGGING</p>
+            <h1>
+              <span class="line"><i>把软件授权，</i></span>
+              <span class="line"><i>做成一条</i></span>
+              <span class="line is-accent"><i>可审计的闭环。</i></span>
+            </h1>
+            <p class="lead">
+              四端程序、密钥生命周期、设备绑定、离线激活、邮箱账号、告警规则与多渠道通知。
+              单机 SQLite 部署，数据留在自己手里。
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-accent btn-lg" href="#features">
+                查看全功能
+                <svg><use href="#i-arrow"></use></svg>
+              </a>
+              <a class="btn btn-line btn-lg" href="#deploy">部署到服务器</a>
+            </div>
+            <dl class="hero-meta">
+              <div><dt data-count="4">4</dt><dd>独立程序</dd></div>
+              <div><dt data-count="7">7</dt><dd>告警指标</dd></div>
+              <div><dt data-count="5">5</dt><dd>通知渠道</dd></div>
+              <div><dt data-count="3">3</dt><dd>层完整性校验</dd></div>
+            </dl>
+          </div>
+
+          <div class="hero-visual" data-tilt aria-hidden="true">
+            <div class="app-window">
+              <div class="app-bar">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="app-title">SQ 管理端 · 密钥运营</span>
+                <span class="app-demo">界面示意 · 演示数据</span>
+                <span class="app-status"><i></i>127.0.0.1:8765</span>
+              </div>
+              <div class="app-body">
+                <aside class="app-side">
+                  <div class="app-side-brand">SQ</div>
+                  <span class="item is-active"><svg><use href="#i-chart"></use></svg>系统概览</span>
+                  <span class="item"><svg><use href="#i-key"></use></svg>生成密钥</span>
+                  <span class="item"><svg><use href="#i-file"></use></svg>密钥管理</span>
+                  <span class="item"><svg><use href="#i-db"></use></svg>批次管理</span>
+                  <span class="item"><svg><use href="#i-globe"></use></svg>离线激活</span>
+                  <span class="item"><svg><use href="#i-bell"></use></svg>告警中心</span>
+                  <span class="item"><svg><use href="#i-user"></use></svg>用户管理</span>
+                  <span class="item"><svg><use href="#i-lock"></use></svg>审计日志</span>
+                </aside>
+                <div class="app-main">
+                  <div class="app-main-head"><strong>系统概览</strong><span>近 7 天</span></div>
+                  <div class="stat-grid">
+                    <div class="stat"><small>密钥总数</small><b data-count="12480" data-comma="1">12,480</b><em class="ok">+320</em></div>
+                    <div class="stat"><small>已激活</small><b data-count="9732" data-comma="1">9,732</b><em>78.0%</em></div>
+                    <div class="stat"><small>在线并发</small><b data-count="1286" data-comma="1">1,286</b><em>心跳 120s</em></div>
+                    <div class="stat"><small>未处理告警</small><b class="warn" data-count="3">3</b><em>风控 2 · 完整性 1</em></div>
+                  </div>
+                  <div class="app-cols">
+                    <div class="table-card">
+                      <div class="table-head"><span>密钥</span><span>版本</span><span>状态</span><span>到期</span></div>
+                      <div class="table-row"><span>GSQ-82K4-****-7F1A</span><span>专业版</span><span class="tag tag-ok">有效</span><span>2027-03-18</span></div>
+                      <div class="table-row"><span>GSQ-51QZ-****-2C9D</span><span>企业版</span><span class="tag tag-ok">有效</span><span>2026-12-02</span></div>
+                      <div class="table-row"><span>GSQ-39MN-****-8AB0</span><span>标准版</span><span class="tag tag-warn">冻结</span><span>2026-11-21</span></div>
+                      <div class="table-row"><span>GSQ-77XT-****-4E62</span><span>专业版</span><span class="tag tag-dim">未使用</span><span>—</span></div>
+                      <div class="table-row"><span>GSQ-14PL-****-9D3C</span><span>标准版</span><span class="tag tag-bad">已吊销</span><span>2026-08-30</span></div>
+                    </div>
+                    <div class="side-card">
+                      <div class="side-head">告警规则</div>
+                      <div class="rule-row"><span>激活率</span><b>≥ 90%</b></div>
+                      <div class="rule-row"><span>在线并发</span><b>≥ 500</b></div>
+                      <div class="rule-row"><span>完整性告警</span><b>≥ 1</b></div>
+                      <div class="alert-live">
+                        <svg><use href="#i-alert"></use></svg>
+                        <div>新硬件码抢占设备位<em>已冻结 · 邮件已发送</em></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="float-chip chip-a"><svg><use href="#i-shield"></use></svg>attest 403 · 未登记版本</div>
+            <div class="float-chip chip-b"><svg><use href="#i-bell"></use></svg>IP 网段跳动 · 已通知</div>
+          </div>
+        </div>
+
+        <div class="scroll-hint" aria-hidden="true">
+          <span>向下浏览</span>
+          <svg><use href="#i-chevron"></use></svg>
+        </div>
+
+        <div class="shell hero-strip">
+          <span>FastAPI + SQLite</span>
+          <span>PySide6 四端</span>
+          <span>HMAC-SHA256 请求签名</span>
+          <span>Ed25519 离线 / 响应签名</span>
+          <span>PBKDF2-SHA256 600,000 次</span>
+          <span>onefile exe · 免 Python</span>
+        </div>
+
+        <div class="marquee" aria-hidden="true">
+          <div class="marquee-track">
+            <div class="marquee-group">
+              <span>HMAC-SHA256 请求签名</span>
+              <span>Ed25519 离线 / 响应签名</span>
+              <span>PBKDF2-SHA256 600,000 次</span>
+              <span>AES-GCM 会话密钥</span>
+              <span>release_manifest 完整性校验</span>
+              <span>attest 发布白名单</span>
+              <span>告警规则引擎 · 7 指标</span>
+              <span>邮件队列与退避重试</span>
+              <span>Webhook · 钉钉 · 企微 · 飞书</span>
+              <span>批次吊销与恢复</span>
+              <span>离线激活码 LICACT1</span>
+              <span>硬件指纹绑定</span>
+              <span>Python SDK 嵌入</span>
+              <span>单机 SQLite · 免 Python</span>
+            </div>
+            <div class="marquee-group">
+              <span>HMAC-SHA256 请求签名</span>
+              <span>Ed25519 离线 / 响应签名</span>
+              <span>PBKDF2-SHA256 600,000 次</span>
+              <span>AES-GCM 会话密钥</span>
+              <span>release_manifest 完整性校验</span>
+              <span>attest 发布白名单</span>
+              <span>告警规则引擎 · 7 指标</span>
+              <span>邮件队列与退避重试</span>
+              <span>Webhook · 钉钉 · 企微 · 飞书</span>
+              <span>批次吊销与恢复</span>
+              <span>离线激活码 LICACT1</span>
+              <span>硬件指纹绑定</span>
+              <span>Python SDK 嵌入</span>
+              <span>单机 SQLite · 免 Python</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 01 四端产品 -->
+      <section class="section" id="suite">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">01</span>
+            <h2>四端产品，各司其职</h2>
+            <p>四个独立程序共用同一个授权服务：服务端负责签发与校验，管理端负责运营，主控端负责系统管理，验证端面向最终用户。</p>
+          </header>
+
+          <div class="tabs" role="tablist" aria-label="四端产品">
+            <button class="tab is-active" role="tab" aria-selected="true" data-tab="server">
+              <svg><use href="#i-server"></use></svg>本地服务器
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="admin">
+              <svg><use href="#i-monitor"></use></svg>管理端
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="master">
+              <svg><use href="#i-crown"></use></svg>主控端
+            </button>
+            <button class="tab" role="tab" aria-selected="false" data-tab="verification">
+              <svg><use href="#i-phone"></use></svg>验证端
+            </button>
+          </div>
+
+          <div class="tab-panels">
+            <article class="tab-panel is-active" data-panel="server">
+              <div class="end-copy">
+                <h3>本地服务器 · 授权核心</h3>
+                <p>FastAPI + SQLite 的授权服务：签发与校验密钥、管理数据库、执行告警规则、投递通知。</p>
+                <ul class="ticks">
+                  <li>REST API，默认监听 127.0.0.1:8765，可无界面（headless）运行</li>
+                  <li>密钥签发、状态机、批次统计与离线激活码签发</li>
+                  <li>告警规则引擎：7 类指标、阈值、冷却与事件状态</li>
+                  <li>SMTP 邮件队列 + Webhook / 钉钉 / 企微 / 飞书通道投递</li>
+                  <li>发布白名单（release_hashes / release_meta）与 attest 校验</li>
+                  <li>数据库一键备份与恢复，含完整性校验</li>
+                </ul>
+              </div>
+              <div class="end-mock">
+                <div class="mock-head"><span>server_config.json</span><b>运行中</b></div>
+                <div class="mock-field"><span>host / port</span><code>127.0.0.1:8765</code></div>
+                <div class="mock-field"><span>attest_mode</span><code>auto</code></div>
+                <div class="mock-field"><span>SMTP</span><code>smtp.example.com:587 · STARTTLS</code></div>
+                <div class="mock-field"><span>白名单</span><code>4 个应用哈希 · 1 个 release_id</code></div>
+                <div class="mock-log"><i></i>已导入发布清单：4 个应用哈希</div>
+                <div class="mock-log"><i></i>email worker：sent 128 · failed 0 · dead 0</div>
+                <div class="mock-log"><i></i>alert engine：evaluated 7 rules · fired 1</div>
+              </div>
+            </article>
+
+            <article class="tab-panel" data-panel="admin">
+              <div class="end-copy">
+                <h3>管理端 · 密钥运营</h3>
+                <p>面向日常运营：批量发行与全生命周期管理，查看统计、告警与审计。</p>
+                <ul class="ticks">
+                  <li>批量生成时长卡 / 激活次数卡，支持版本与备注</li>
+                  <li>吊销、恢复、冻结、解冻、续期、删除、解绑</li>
+                  <li>批次聚合统计、整批吊销 / 恢复、跨页批量操作</li>
+                  <li>告警中心：规则配置、事件确认、通知渠道管理</li>
+                  <li>用户管理：搜索、启用 / 禁用、强制脱绑</li>
+                  <li>审计日志筛选、分页与 CSV 导出</li>
+                </ul>
+              </div>
+              <div class="end-mock">
+                <div class="mock-head"><span>密钥管理</span><b>12,480 条</b></div>
+                <div class="mock-table">
+                  <div class="mock-tr"><span>GSQ-82K4-****-7F1A</span><em class="tag-ok">有效</em></div>
+                  <div class="mock-tr"><span>GSQ-39MN-****-8AB0</span><em class="tag-warn">冻结</em></div>
+                  <div class="mock-tr"><span>GSQ-77XT-****-4E62</span><em class="tag-dim">未使用</em></div>
+                  <div class="mock-tr"><span>GSQ-14PL-****-9D3C</span><em class="tag-bad">已吊销</em></div>
+                </div>
+                <div class="mock-actions"><span>批量吊销</span><span>批量续期</span><span>导出 CSV</span></div>
+              </div>
+            </article>
+
+            <article class="tab-panel" data-panel="master">
+              <div class="end-copy">
+                <h3>主控端 · 系统管理</h3>
+                <p>最高权限：管理员账号、邮箱与找回密码、系统级设置与发布白名单。</p>
+                <ul class="ticks">
+                  <li>管理员创建、启停、重置密码与角色管理</li>
+                  <li>管理员邮箱绑定、验证码验证与找回密码</li>
+                  <li>系统设置：监听地址、数据库、SMTP、AI 助手</li>
+                  <li>发布白名单导入（release_manifest + 签名）</li>
+                  <li>主控账号保护与强制改密闸门</li>
+                  <li>与运营端导航区分：系统管理 / 密钥运营</li>
+                </ul>
+              </div>
+              <div class="end-mock">
+                <div class="mock-head"><span>管理员管理</span><b>系统管理</b></div>
+                <div class="mock-table">
+                  <div class="mock-tr"><span>admin</span><em class="tag-ok">已绑定邮箱</em></div>
+                  <div class="mock-tr"><span>ops-01</span><em class="tag-ok">已验证</em></div>
+                  <div class="mock-tr"><span>ops-02</span><em class="tag-dim">未验证</em></div>
+                </div>
+                <div class="mock-actions"><span>设置邮箱</span><span>发送验证码</span><span>重置密码</span></div>
+              </div>
+            </article>
+
+            <article class="tab-panel" data-panel="verification">
+              <div class="end-copy">
+                <h3>验证端 · 最终用户</h3>
+                <p>邮箱账号或激活码双模式：联网校验、离线激活、心跳保活与资料管理。</p>
+                <ul class="ticks">
+                  <li>邮箱注册 / 登录 / 找回密码，一个邮箱同时绑定一个密钥</li>
+                  <li>激活码模式 + 离线激活码（LICACT1 请求码 / 激活码）</li>
+                  <li>心跳带随机抖动，断网可回退离线授权</li>
+                  <li>个人资料：显示名、头像（PNG / JPG / WebP ≤256KB）</li>
+                  <li>续费请求、失效后自助脱绑；有效期内脱绑需管理员</li>
+                  <li>可脱离发布文件独立运行，也可作为 Python SDK 嵌入第三方软件</li>
+                </ul>
+              </div>
+              <div class="end-mock">
+                <div class="mock-head"><span>验证端</span><b class="tag-ok">已激活</b></div>
+                <div class="mock-tabs"><span class="on">邮箱登录</span><span>激活码</span></div>
+                <div class="mock-field"><span>账号</span><code>user@example.com</code></div>
+                <div class="mock-field"><span>绑定密钥</span><code>GSQ-82K4-****-7F1A</code></div>
+                <div class="mock-field"><span>到期时间</span><code>2027-03-18 · 剩余 132 天</code></div>
+                <div class="mock-log"><i></i>心跳正常 · 下次间隔 23s</div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 全功能矩阵 -->
+      <section class="section section-alt" id="features">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">02</span>
+            <h2>全功能矩阵</h2>
+            <p>从密钥发行到告警投递的完整能力清单，共 8 个模块。</p>
+          </header>
+
+          <div class="feature-grid" data-stagger>
+            <article class="feature-card">
+              <header><svg><use href="#i-key"></use></svg><span>01</span></header>
+              <h3>密钥发行</h3>
+              <ul>
+                <li>时长卡：分钟 / 小时 / 天 / 周 / 月 / 季 / 年，支持自定义单位</li>
+                <li>激活次数卡：1 ~ 100000 次，同一机器重复激活不重复计数</li>
+                <li>次数用尽自动吊销，无法恢复 / 续期，状态显示「已用尽」</li>
+                <li>版本（edition）、备注、自定义前缀，支持一次批量生成</li>
+                <li>密钥列表 CSV 导出，导出内容做公式注入防护</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-db"></use></svg><span>02</span></header>
+              <h3>批次与状态机</h3>
+              <ul>
+                <li>批次号聚合生成量与激活量，支持关键词筛选</li>
+                <li>整批吊销、整批恢复、跨页批量操作与进度提示</li>
+                <li>状态：未使用 / 有效 / 冻结 / 吊销 / 过期 / 次数用尽</li>
+                <li>冻结指定时长后自动恢复；吊销可恢复，全程可追溯</li>
+                <li>续期同步更新设备绑定到期时间</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-cpu"></use></svg><span>03</span></header>
+              <h3>设备与席位</h3>
+              <ul>
+                <li>硬件指纹：MachineGuid + 磁盘卷序列 + MAC + 处理器特征</li>
+                <li>max_devices 在事务内原子占用，并发激活不超卖</li>
+                <li>支持解绑换机，绑定历史与操作来源可查</li>
+                <li>心跳带随机抖动，服务端按时间窗统计在线并发</li>
+                <li>同一机器重复激活幂等，不重复扣减次数</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-globe"></use></svg><span>04</span></header>
+              <h3>激活方式</h3>
+              <ul>
+                <li>联网激活：HMAC-SHA256 请求签名 + nonce 防重放 + 时间窗</li>
+                <li>离线激活：Ed25519 签名码（LICREQ1 请求码 → LICACT1 激活码）</li>
+                <li>激活次数卡强制联网激活，保证次数扣减准确</li>
+                <li>验证端 standalone 模式：可脱离发布文件独立运行</li>
+                <li>Python SDK 可嵌入第三方软件，自动心跳与离线码校验</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-shield"></use></svg><span>05</span></header>
+              <h3>安全体系</h3>
+              <ul>
+                <li>请求 HMAC-SHA256、响应 Ed25519 固定公钥，双向签名</li>
+                <li>PBKDF2-SHA256 600,000 次迭代，改密后旧令牌全部失效</li>
+                <li>会话密钥 AES-GCM 落库加密，单独拷库无法伪造签名</li>
+                <li>EXE 发布清单 + Ed25519 签名 + 目录完整性校验</li>
+                <li>release_id 与 manifest 哈希校验 + 服务端 attest 白名单</li>
+                <li>登录 / 验证失败锁定、来源 IP 限流、恒定时间口令校验</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-user"></use></svg><span>06</span></header>
+              <h3>账号与用户</h3>
+              <ul>
+                <li>管理员邮箱绑定、验证码验证与邮箱找回密码</li>
+                <li>验证端邮箱注册 / 登录 / 找回密码，一人一号</li>
+                <li>一个邮箱同时只绑定一个密钥；失效后可自助脱绑</li>
+                <li>个人资料：显示名、头像（PNG / JPG / WebP ≤256KB）</li>
+                <li>用户管理：搜索、启用 / 禁用、强制脱绑</li>
+                <li>记住账号 / 记住密码，Windows 下 DPAPI 加密保存</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-bell"></use></svg><span>07</span></header>
+              <h3>告警与通知</h3>
+              <ul>
+                <li>7 类指标：激活率、在线并发、过期率、7 天内到期、激活失败、风控事件、完整性告警</li>
+                <li>规则：运算符、阈值、统计窗口、级别、冷却时间、渠道与启停</li>
+                <li>事件三态：触发中 / 已确认 / 已处理；指标恢复自动 resolved</li>
+                <li>内置风控：新硬件码冻结、IP 跳动告警、完整性失败告警</li>
+                <li>SMTP 邮件队列 + Webhook / 钉钉 / 企微 / 飞书，失败指数退避重试</li>
+                <li>投递记录可查，Webhook 带 HMAC 签名，钉钉 / 飞书支持加签</li>
+              </ul>
+            </article>
+
+            <article class="feature-card">
+              <header><svg><use href="#i-terminal"></use></svg><span>08</span></header>
+              <h3>运维与扩展</h3>
+              <ul>
+                <li>审计日志：关键词 / 类型 / 时间筛选、分页、CSV 导出、按保留期清理</li>
+                <li>数据库一键备份与恢复，恢复前做结构与完整性校验</li>
+                <li>统计结果缓存、过期扫描节流、热点索引，服务端不卡顿</li>
+                <li>REST API 全量开放；Python SDK 直接嵌入第三方程序</li>
+                <li>发布包卫生检查：只分发 release_package（exe + 清单 + 签名）</li>
+                <li>首次运行引导、强制改密、控制台隐藏与深色模式适配</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="use-cases">
+            <div class="use-head">
+              <h3>适用场景</h3>
+              <p>同一套授权内核，覆盖自研软件、内网离线、客户端订阅与渠道分发。</p>
+            </div>
+            <div class="use-grid" data-stagger>
+              <article>
+                <svg><use href="#i-monitor"></use></svg>
+                <h4>自研软件厂商</h4>
+                <p>给桌面软件发卡、绑定设备、控制版本与有效期，发行与回收全程有记录。</p>
+              </article>
+              <article>
+                <svg><use href="#i-globe"></use></svg>
+                <h4>内网 / 离线环境</h4>
+                <p>无外网也能完成授权：请求码加签名激活码，离线校验不依赖网络。</p>
+              </article>
+              <article>
+                <svg><use href="#i-phone"></use></svg>
+                <h4>客户端订阅产品</h4>
+                <p>邮箱账号登录加心跳在线；到期数量进入告警指标，续费请求直达运营。</p>
+              </article>
+              <article>
+                <svg><use href="#i-db"></use></svg>
+                <h4>渠道与分销</h4>
+                <p>按批次生成与分发密钥，核销与激活状态可追溯，整批吊销随时兜底。</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 交互演示 -->
+      <section class="section" id="playground">
+        <div class="sq-watermark" aria-hidden="true">SQ</div>
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">03</span>
+            <span class="dev-badge">开发中 · DEV</span>
+            <h2>动手试试：四个交互演示</h2>
+            <p>所有交互都在本页模拟，不发送任何请求。用它直观感受密钥格式、授权链路、风控裁决、告警规则与部署组合。</p>
+          </header>
+
+          <div class="playground-grid" data-stagger>
+            <article class="sim-card sim-wide" id="sim-activate">
+              <header class="sim-head">
+                <div>
+                  <span class="sim-tag">交互 01</span><span class="sim-dev">DEV</span>
+                  <h3>激活与风控模拟器</h3>
+                </div>
+                <p>先点「激活」走通设备绑定，再注入风险，看服务端如何裁决。</p>
+              </header>
+              <div class="sim-two-col">
+                <div class="sim-client">
+                  <div class="sim-window-bar">
+                    <span class="sim-sq">SQ</span>
+                    <em>验证端 · 开发中</em>
+                    <b id="sim-license-state" class="sim-state">未激活</b>
+                  </div>
+                  <label class="sim-field">
+                    <span>授权密钥</span>
+                    <input id="sim-key" value="GSQ-7K2MF-9QXAR-4TZWD-2HN8P" spellcheck="false" autocomplete="off" />
+                  </label>
+                  <label class="sim-field">
+                    <span>设备硬件码</span>
+                    <input id="sim-machine" value="8F3A1-0C4D9-7E2B5" spellcheck="false" readonly />
+                  </label>
+                  <div class="sim-samples">
+                    <span>样本</span>
+                    <button type="button" data-sample="valid">有效密钥</button>
+                    <button type="button" data-sample="expired">已过期</button>
+                    <button type="button" data-sample="revoked">已吊销</button>
+                    <button type="button" data-sample="exhausted">次数用尽</button>
+                    <button type="button" data-sample="random" class="sim-rand">随机 GSQ</button>
+                  </div>
+                  <div class="sim-actions">
+                    <button class="btn btn-accent" type="button" data-sim-action="activate">① 激活</button>
+                    <button class="btn btn-line" type="button" data-sim-action="verify">② 校验</button>
+                    <button class="btn btn-line" type="button" data-sim-action="heartbeat">③ 心跳</button>
+                  </div>
+                  <div class="sim-progress" id="sim-progress"><span></span></div>
+                  <div class="sim-hint" id="sim-hint">提示：先点「激活」，再点「校验」或「心跳」。</div>
+                </div>
+
+                <div class="sim-server">
+                  <div class="sim-server-head">
+                    <span>服务端裁决</span>
+                    <button class="sim-reset" id="sim-reset" type="button">重置演示</button>
+                  </div>
+                  <div class="sim-facts">
+                    <div><span>密钥状态</span><b id="sim-fact-status">未使用</b></div>
+                    <div><span>绑定设备</span><b id="sim-fact-device">—</b></div>
+                    <div><span>到期时间</span><b id="sim-fact-expiry">—</b></div>
+                    <div><span>会话密钥</span><b id="sim-fact-session">—</b></div>
+                  </div>
+                  <div class="sim-risk">
+                    <span>注入风险</span>
+                    <button type="button" data-sim-risk="machine">新硬件码</button>
+                    <button type="button" data-sim-risk="ip">IP 跳动</button>
+                    <button type="button" data-sim-risk="tamper">篡改 EXE</button>
+                  </div>
+                  <div class="sim-device-actions" id="sim-device-actions" hidden>
+                    <span>设备操作</span>
+                    <button type="button" data-sim-device="unbind">解绑设备</button>
+                    <button type="button" data-sim-device="freeze">冻结密钥</button>
+                    <button type="button" data-sim-device="revoke">吊销密钥</button>
+                    <button type="button" data-sim-device="restore">恢复密钥</button>
+                  </div>
+                  <div class="sim-alert" id="sim-alert" hidden></div>
+                  <div class="sim-log" id="sim-log" aria-live="polite">
+                    <div class="sim-log-line">[demo] 等待操作…</div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="sim-card" id="sim-rule">
+              <header class="sim-head">
+                <div>
+                  <span class="sim-tag">交互 02</span><span class="sim-dev">DEV</span>
+                  <h3>告警规则沙盒</h3>
+                </div>
+                <p>调整阈值与窗口，看规则在曲线上的触发位置。</p>
+              </header>
+              <div class="sim-rule-controls">
+                <label>
+                  <span>指标</span>
+                  <select id="rule-metric">
+                    <option value="online_devices" selected>在线并发(台)</option>
+                    <option value="activation_rate">激活率(%)</option>
+                    <option value="expiration_rate">过期率(%)</option>
+                    <option value="failed_activations">激活失败(次)</option>
+                    <option value="tamper_events">完整性告警(次)</option>
+                  </select>
+                </label>
+                <label>
+                  <span>条件</span>
+                  <select id="rule-operator">
+                    <option value="gte" selected>≥</option>
+                    <option value="lte">≤</option>
+                  </select>
+                </label>
+                <label>
+                  <span>阈值 <b id="rule-threshold-value">500</b></span>
+                  <input id="rule-threshold" type="range" min="0" max="1200" step="10" value="500" />
+                </label>
+                <label>
+                  <span>窗口</span>
+                  <select id="rule-window">
+                    <option value="300">5 分钟</option>
+                    <option value="600" selected>10 分钟</option>
+                    <option value="3600">1 小时</option>
+                    <option value="86400">24 小时</option>
+                  </select>
+                </label>
+              </div>
+              <div class="rule-chart">
+                <svg id="rule-chart" viewBox="0 0 440 150" preserveAspectRatio="none" aria-hidden="true">
+                  <path id="rule-area" class="rule-area" d=""></path>
+                  <path id="rule-line" class="rule-line" d=""></path>
+                  <line id="rule-threshold-line" class="rule-threshold" x1="0" y1="0" x2="440" y2="0"></line>
+                  <circle id="rule-point" class="rule-point" r="5" cx="-20" cy="-20"></circle>
+                </svg>
+                <div class="rule-legend">
+                  <span class="dot-series"></span>指标采样
+                  <span class="dot-threshold"></span>阈值线
+                  <span class="dot-point"></span>触发点
+                </div>
+              </div>
+              <button class="btn btn-accent sim-evaluate" id="rule-evaluate" type="button">评估一次</button>
+              <div class="rule-result" id="rule-result">调整参数后点「评估一次」。</div>
+            </article>
+
+            <article class="sim-card" id="sim-recommend">
+              <header class="sim-head">
+                <div>
+                  <span class="sim-tag">交互 03</span><span class="sim-dev">DEV</span>
+                  <h3>部署方案推荐器</h3>
+                </div>
+                <p>选择三个条件，生成推荐的模块组合与配置摘要。</p>
+              </header>
+              <div class="rec-questions">
+                <div class="rec-q">
+                  <span>部署位置</span>
+                  <div class="seg" data-rec="deploy">
+                    <button class="on" type="button" data-value="local">单机 / 内网</button>
+                    <button type="button" data-value="server">服务器 / 远程</button>
+                  </div>
+                </div>
+                <div class="rec-q">
+                  <span>分发方式</span>
+                  <div class="seg" data-rec="distribute">
+                    <button class="on" type="button" data-value="direct">邮件 / 人工发卡</button>
+                    <button type="button" data-value="channel">渠道批量分发</button>
+                  </div>
+                </div>
+                <div class="rec-q">
+                  <span>离线设备</span>
+                  <div class="seg" data-rec="offline">
+                    <button class="on" type="button" data-value="yes">有离线设备</button>
+                    <button type="button" data-value="no">全部联网</button>
+                  </div>
+                </div>
+              </div>
+              <div class="rec-output">
+                <div class="rec-chips" id="rec-chips"></div>
+                <div class="rec-summary">
+                  <pre id="rec-summary"></pre>
+                  <button class="copy" id="rec-copy" type="button">复制摘要</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="sim-card sim-wide" id="sim-keygen">
+              <header class="sim-head">
+                <div>
+                  <span class="sim-tag">交互 04</span><span class="sim-dev">DEV</span>
+                  <h3>密钥批量生成器</h3>
+                </div>
+                <p>按真实规则生成 GSQ 密钥：大写、不含 I/O/0/1，4 组 × 5 位。演示数据不会入库。</p>
+              </header>
+              <div class="keygen-controls">
+                <label>
+                  <span>数量 <b id="keygen-count-value">8</b></span>
+                  <input id="keygen-count" type="range" min="3" max="20" value="8" />
+                </label>
+                <label>
+                  <span>卡密模式</span>
+                  <select id="keygen-type">
+                    <option value="duration" selected>时长卡</option>
+                    <option value="activation">激活次数卡</option>
+                  </select>
+                </label>
+                <label>
+                  <span>时长 / 次数</span>
+                  <select id="keygen-duration">
+                    <option value="365">年卡 · 365 天</option>
+                    <option value="30">月卡 · 30 天</option>
+                    <option value="7">周卡 · 7 天</option>
+                    <option value="1">天卡 · 1 天</option>
+                    <option value="100">100 次</option>
+                    <option value="500">500 次</option>
+                  </select>
+                </label>
+                <label>
+                  <span>设备上限</span>
+                  <select id="keygen-devices">
+                    <option value="1">1 台</option>
+                    <option value="3" selected>3 台</option>
+                    <option value="5">5 台</option>
+                    <option value="10">10 台</option>
+                  </select>
+                </label>
+                <button class="btn btn-accent" id="keygen-run" type="button">生成密钥</button>
+              </div>
+              <div class="keygen-output">
+                <div class="keygen-list" id="keygen-list">
+                  <div class="keygen-empty">点「生成密钥」按真实格式生成一批演示密钥。</div>
+                </div>
+                <div class="keygen-actions">
+                  <button class="copy" id="keygen-copy" type="button">复制全部</button>
+                  <button class="copy" id="keygen-csv" type="button">导出 CSV</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 软件全景模拟 -->
+      <section class="section section-alt" id="studio">
+        <div class="sq-watermark" aria-hidden="true">SQ</div>
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">04</span>
+            <span class="dev-badge">开发中 · DEV</span>
+            <h2>软件全景模拟 · 八个页面全可点</h2>
+            <p>
+              不播视频、不贴静态图：左侧八个页面是真能切换的，生成密钥会真的生成、冻结吊销会真的改状态、
+              告警能处理、审计能筛选。提示条停留 6 秒以上并带进度条，鼠标悬停或手指按住会暂停计时。
+            </p>
+          </header>
+
+          <div class="studio" id="studio-app">
+            <div class="studio-chrome">
+              <span class="studio-dots"><i></i><i></i><i></i></span>
+              <span class="studio-title">SQ 管理端 · v1.0.0 Beta</span>
+              <span class="studio-conn"><i></i>127.0.0.1:8765 · 已连接</span>
+            </div>
+
+            <div class="studio-body">
+              <div class="studio-side" role="tablist" aria-label="管理端页面">
+                <span class="studio-logo" role="presentation">SQ</span>
+                <button class="studio-nav is-active" data-view="overview" type="button" role="tab" aria-selected="true">
+                  <svg><use href="#i-chart"></use></svg><span>系统概览</span>
+                </button>
+                <button class="studio-nav" data-view="generate" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-key"></use></svg><span>生成密钥</span>
+                </button>
+                <button class="studio-nav" data-view="keys" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-file"></use></svg><span>密钥管理</span>
+                </button>
+                <button class="studio-nav" data-view="batch" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-db"></use></svg><span>批次管理</span>
+                </button>
+                <button class="studio-nav" data-view="offline" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-globe"></use></svg><span>离线激活</span>
+                </button>
+                <button class="studio-nav" data-view="alerts" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-bell"></use></svg><span>告警中心</span>
+                </button>
+                <button class="studio-nav" data-view="users" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-user"></use></svg><span>用户管理</span>
+                </button>
+                <button class="studio-nav" data-view="audit" type="button" role="tab" aria-selected="false">
+                  <svg><use href="#i-lock"></use></svg><span>审计日志</span>
+                </button>
+                <span class="studio-account" role="presentation"><i>su</i><b>admin</b><em>超级管理员</em></span>
+              </div>
+
+              <div class="studio-stage" id="studio-stage">
+                <!-- 系统概览 -->
+                <div class="studio-view is-active" data-view-panel="overview" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>系统概览</strong>
+                    <span class="studio-bar-meta">近 7 天 · 演示数据（非真实运营数据）</span>
+                  </div>
+                  <div class="studio-stats">
+                    <div class="studio-stat"><small>密钥总数</small><b data-studio-count="1284">0</b><em class="ok">本周 +96</em></div>
+                    <div class="studio-stat"><small>已激活</small><b data-studio-count="1031">0</b><em>80.3%</em></div>
+                    <div class="studio-stat"><small>在线并发</small><b data-studio-count="246">0</b><em>心跳 120s</em></div>
+                    <div class="studio-stat"><small>待处理告警</small><b data-studio-count="3" class="warn">0</b><em>风控 2 · 完整性 1</em></div>
+                  </div>
+                  <div class="studio-cols">
+                    <div class="studio-panel">
+                      <div class="studio-panel-head"><span>近 7 日激活趋势</span><em>单位：次</em></div>
+                      <div class="studio-chart">
+                        <span style="--h: 38%"><i>一</i></span>
+                        <span style="--h: 52%"><i>二</i></span>
+                        <span style="--h: 44%"><i>三</i></span>
+                        <span style="--h: 71%"><i>四</i></span>
+                        <span style="--h: 63%"><i>五</i></span>
+                        <span style="--h: 88%"><i>六</i></span>
+                        <span style="--h: 76%"><i>日</i></span>
+                      </div>
+                    </div>
+                    <div class="studio-panel">
+                      <div class="studio-panel-head"><span>最近事件</span><em>实时</em></div>
+                      <ul class="studio-feed">
+                        <li><span class="tag tag-ok">激活</span>GSQ-7K2MF-****-2HN8P · 专业版<em>12 秒前</em></li>
+                        <li><span class="tag tag-warn">风控</span>新硬件码抢占设备位 · 已冻结<em>4 分钟前</em></li>
+                        <li><span class="tag tag-bad">完整性</span>release_manifest 哈希不一致 · 已拒绝<em>27 分钟前</em></li>
+                        <li><span class="tag tag-dim">邮箱</span>告警已投递 user@example.com<em>1 小时前</em></li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="studio-actions">
+                    <button class="btn btn-accent" data-studio-quick="generate" type="button">生成一批密钥</button>
+                    <button class="btn btn-line" data-studio-quick="alerts" type="button">查看告警中心</button>
+                    <button class="btn btn-line" data-studio-quick="offline" type="button">模拟离线激活</button>
+                  </div>
+                </div>
+
+                <!-- 生成密钥 -->
+                <div class="studio-view" data-view-panel="generate" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>生成密钥</strong>
+                    <span class="studio-bar-meta">输出格式 GSQ-XXXXX-XXXXX-XXXXX-XXXXX</span>
+                  </div>
+                  <div class="studio-form">
+                    <label class="studio-field">
+                      <span>数量 <b id="studio-count-value">6</b></span>
+                      <input id="studio-count" type="range" min="1" max="30" value="6" />
+                    </label>
+                    <label class="studio-field">
+                      <span>版本</span>
+                      <select id="studio-edition">
+                        <option>标准版</option>
+                        <option selected>专业版</option>
+                        <option>企业版</option>
+                      </select>
+                    </label>
+                    <label class="studio-field">
+                      <span>有效期</span>
+                      <select id="studio-duration">
+                        <option>30 天</option>
+                        <option>90 天</option>
+                        <option selected>365 天</option>
+                        <option>永久</option>
+                      </select>
+                    </label>
+                    <label class="studio-field">
+                      <span>设备数</span>
+                      <select id="studio-devices">
+                        <option>1 台</option>
+                        <option>3 台</option>
+                        <option selected>5 台</option>
+                        <option>不限</option>
+                      </select>
+                    </label>
+                    <label class="studio-field studio-field-wide">
+                      <span>备注 / 批次名</span>
+                      <input id="studio-note" type="text" value="双十一渠道批次" spellcheck="false" />
+                    </label>
+                  </div>
+                  <div class="studio-actions">
+                    <button class="btn btn-accent" id="studio-generate" type="button">生成并写入批次</button>
+                    <button class="btn btn-line" id="studio-generate-csv" type="button">导出本次结果 CSV</button>
+                  </div>
+                  <div class="studio-output">
+                    <div class="studio-panel-head"><span>本次生成结果</span><em id="studio-output-meta">尚未生成</em></div>
+                    <div class="studio-keys" id="studio-output">
+                      <p class="studio-empty">点「生成并写入批次」，密钥会按真实字符集生成并直接进入密钥管理。</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 密钥管理 -->
+                <div class="studio-view" data-view-panel="keys" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>密钥管理</strong>
+                    <span class="studio-bar-meta" id="studio-keys-meta">共 5 条演示数据</span>
+                  </div>
+                  <div class="studio-toolbar">
+                    <input id="studio-search" type="search" placeholder="搜索密钥 / 邮箱" spellcheck="false" />
+                    <div class="studio-filter" id="studio-filter">
+                      <button class="is-on" data-filter="all" type="button">全部</button>
+                      <button data-filter="有效" type="button">有效</button>
+                      <button data-filter="未使用" type="button">未使用</button>
+                      <button data-filter="已冻结" type="button">已冻结</button>
+                      <button data-filter="已吊销" type="button">已吊销</button>
+                    </div>
+                  </div>
+                  <div class="studio-table" id="studio-table">
+                    <div class="studio-tr studio-th">
+                      <span>密钥</span><span>版本</span><span>状态</span><span>设备</span><span>到期</span><span>操作</span>
+                    </div>
+                    <div class="studio-rows" id="studio-keys"></div>
+                  </div>
+                </div>
+
+                <!-- 批次管理 -->
+                <div class="studio-view" data-view-panel="batch" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>批次管理</strong>
+                    <span class="studio-bar-meta">整批吊销 / 整批延期 / 渠道分发</span>
+                  </div>
+                  <div class="studio-batches" id="studio-batches">
+                    <article class="studio-batch">
+                      <header><strong>双十一渠道批次</strong><span class="tag tag-ok">进行中</span></header>
+                      <dl><div><dt>数量</dt><dd>240</dd></div><div><dt>已激活</dt><dd>186</dd></div><div><dt>渠道</dt><dd>一级代理 · 华东</dd></div><div><dt>创建</dt><dd>2026-11-01</dd></div></dl>
+                      <footer>
+                        <button class="mini" data-batch-action="revoke" type="button">整批吊销</button>
+                        <button class="mini" data-batch-action="extend" type="button">整批延期 30 天</button>
+                      </footer>
+                    </article>
+                    <article class="studio-batch">
+                      <header><strong>企业客户 · 恒远科技</strong><span class="tag tag-warn">部分冻结</span></header>
+                      <dl><div><dt>数量</dt><dd>40</dd></div><div><dt>已激活</dt><dd>39</dd></div><div><dt>渠道</dt><dd>直销</dd></div><div><dt>创建</dt><dd>2026-10-22</dd></div></dl>
+                      <footer>
+                        <button class="mini" data-batch-action="revoke" type="button">整批吊销</button>
+                        <button class="mini" data-batch-action="extend" type="button">整批延期 30 天</button>
+                      </footer>
+                    </article>
+                    <article class="studio-batch">
+                      <header><strong>内测体验码</strong><span class="tag tag-dim">已结束</span></header>
+                      <dl><div><dt>数量</dt><dd>60</dd></div><div><dt>已激活</dt><dd>57</dd></div><div><dt>渠道</dt><dd>官方发放</dd></div><div><dt>创建</dt><dd>2026-09-30</dd></div></dl>
+                      <footer>
+                        <button class="mini" data-batch-action="revoke" type="button">整批吊销</button>
+                        <button class="mini" data-batch-action="extend" type="button">整批延期 30 天</button>
+                      </footer>
+                    </article>
+                  </div>
+                </div>
+
+                <!-- 离线激活 -->
+                <div class="studio-view" data-view-panel="offline" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>离线激活</strong>
+                    <span class="studio-bar-meta">Ed25519 签名 · 硬件指纹绑定 · 断网可用</span>
+                  </div>
+                  <ol class="studio-flow" id="studio-flow">
+                    <li class="is-done"><i>1</i><div><b>验证端导出设备指纹</b><span>8F3A1-0C4D9-7E2B5</span></div></li>
+                    <li class="is-done"><i>2</i><div><b>管理端签发离线激活码</b><span>LICACT1 · 有效期 72 小时</span></div></li>
+                    <li><i>3</i><div><b>验证端导入激活码并验签</b><span>签名与指纹双重校验</span></div></li>
+                    <li><i>4</i><div><b>写入本地授权文件</b><span>后续心跳自动续期</span></div></li>
+                  </ol>
+                  <div class="studio-code">
+                    <pre><code id="studio-lic">LICACT1.eyJkZXYiOiI4RjNBMS0wQzREOS03RTJCNTUiLCJleHAiOjE3NjI0Mjg4MDAsImxpYyI6IlNHUS1ERVYtT0ZGTElORSJ9.Ed25519-SIGNATURE</code></pre>
+                    <div class="studio-actions">
+                      <button class="btn btn-accent" id="studio-offline-run" type="button">模拟导入并验签</button>
+                      <button class="copy" id="studio-offline-copy" type="button">复制激活码</button>
+                    </div>
+                    <p class="studio-verdict" id="studio-verdict">尚未导入激活码。</p>
+                  </div>
+                </div>
+
+                <!-- 告警中心 -->
+                <div class="studio-view" data-view-panel="alerts" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>告警中心</strong>
+                    <span class="studio-bar-meta" id="studio-alert-meta">3 条待处理</span>
+                  </div>
+                  <ul class="studio-alerts" id="studio-alerts">
+                    <li data-alert="0">
+                      <span class="alarm-dot"></span>
+                      <div>
+                        <b>新硬件码抢占设备位</b>
+                        <p>GSQ-7K2MF-****-2HN8P · 同一密钥在两台设备申请绑定，已自动冻结并邮件通知。</p>
+                        <em>风控 · 高优先级 · 4 分钟前</em>
+                      </div>
+                      <button class="mini" data-alert-action="handle" type="button">处理</button>
+                    </li>
+                    <li data-alert="1">
+                      <span class="alarm-dot warn"></span>
+                      <div>
+                        <b>IP 网段跳变 3 次</b>
+                        <p>同一密钥在 2 小时内跨 3 个网段访问，超过 2 次阈值，已发送邮件告警。</p>
+                        <em>风控 · 中优先级 · 22 分钟前</em>
+                      </div>
+                      <button class="mini" data-alert-action="handle" type="button">处理</button>
+                    </li>
+                    <li data-alert="2">
+                      <span class="alarm-dot bad"></span>
+                      <div>
+                        <b>EXE 文件完整性不一致</b>
+                        <p>客户端自检发现文件被增删改，授权请求已直接拒绝并弹出本地告警。</p>
+                        <em>完整性 · 高优先级 · 1 小时前</em>
+                      </div>
+                      <button class="mini" data-alert-action="handle" type="button">处理</button>
+                    </li>
+                  </ul>
+                  <div class="studio-rules">
+                    <div class="studio-panel-head"><span>邮件告警规则</span><em>阈值触发即发信</em></div>
+                    <label class="studio-switch"><input type="checkbox" checked /><i></i><span>激活率低于阈值（低于 60%）</span></label>
+                    <label class="studio-switch"><input type="checkbox" checked /><i></i><span>在线并发超过阈值（超过 500）</span></label>
+                    <label class="studio-switch"><input type="checkbox" checked /><i></i><span>过期率超过阈值（超过 25%）</span></label>
+                    <label class="studio-switch"><input type="checkbox" checked /><i></i><span>文件完整性不一致（≥ 1 次）</span></label>
+                    <label class="studio-switch"><input type="checkbox" /><i></i><span>发送到 Webhook / 钉钉 / 企微 / 飞书</span></label>
+                  </div>
+                </div>
+
+                <!-- 用户管理 -->
+                <div class="studio-view" data-view-panel="users" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>用户管理 · 邮箱账号</strong>
+                    <span class="studio-bar-meta">一个邮箱绑定一枚密钥</span>
+                  </div>
+                  <div class="studio-table">
+                    <div class="studio-tr studio-th">
+                      <span>邮箱</span><span>绑定密钥</span><span>状态</span><span>设备</span><span>最近登录</span><span>操作</span>
+                    </div>
+                    <div class="studio-rows" id="studio-users"></div>
+                  </div>
+                  <p class="studio-note">
+                    密钥失效后用户可选择续费或直接脱绑；账号订阅失效可重新订阅，历史授权记录保留在审计日志里。
+                  </p>
+                </div>
+
+                <!-- 审计日志 -->
+                <div class="studio-view" data-view-panel="audit" role="tabpanel">
+                  <div class="studio-bar">
+                    <strong>审计日志</strong>
+                    <span class="studio-bar-meta">登录 / 生成 / 冻结 / 吊销 / 发信 全留痕</span>
+                  </div>
+                  <div class="studio-filter studio-filter-wide" id="studio-audit-filter">
+                    <button class="is-on" data-audit="all" type="button">全部</button>
+                    <button data-audit="auth" type="button">登录认证</button>
+                    <button data-audit="key" type="button">密钥操作</button>
+                    <button data-audit="risk" type="button">风控与告警</button>
+                    <button data-audit="mail" type="button">邮件投递</button>
+                  </div>
+                  <ul class="studio-audit" id="studio-audit"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="studio-tips">
+            <span><b>提示不秒消失</b>默认停留 6.5 秒，带进度条，可手动关闭</span>
+            <span><b>悬停 / 按住即暂停</b>鼠标移入或手指按住，倒计时立刻停住</span>
+            <span><b>危险操作二次确认</b>冻结、吊销、整批吊销都要弹窗确认</span>
+            <span><b>全键盘可用</b>侧栏 Tab 循环，弹窗 Esc 关闭</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 三维观影 -->
+      <section class="section" id="cinema">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">05</span>
+            <span class="dev-badge">开发中 · DEV</span>
+            <h2>三维观影 · 七个界面一条时间轴</h2>
+            <p>
+              鼠标按住左右拖、手机左右滑、方向键点按都能切；松开自动吸附到最近的卡片，
+              远处卡片自动缩小、后退、虚化。点「自动巡览」让它自己走，触摸或拖动时会先停下来。
+            </p>
+          </header>
+        </div>
+
+        <div class="cinema" id="cinema-app">
+          <div class="cinema-stage" id="cinema-stage" tabindex="0" role="group" aria-label="3D 界面巡览，可拖拽、滑动或用方向键切换">
+            <div class="cinema-rail" id="cinema-rail">
+              <article class="cine-card" data-slide="0">
+                <header><i>01</i><b>系统概览</b><span>管理端</span></header>
+                <div class="cine-shot">
+                  <div class="cine-stats">
+                    <span><small>密钥总数</small><b>12,480</b></span>
+                    <span><small>已激活</small><b>9,732</b></span>
+                    <span><small>在线</small><b>1,286</b></span>
+                  </div>
+                  <div class="cine-bars"><i style="--h: 40%"></i><i style="--h: 62%"></i><i style="--h: 48%"></i><i style="--h: 82%"></i><i style="--h: 70%"></i><i style="--h: 94%"></i></div>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="1">
+                <header><i>02</i><b>生成密钥</b><span>管理端</span></header>
+                <div class="cine-shot">
+                  <div class="cine-lines"><span></span><span></span><span></span></div>
+                  <div class="cine-keylist"><code>GSQ-7K2MF-9QXAR-4TZWD</code><code>GSQ-3P8ND-2LVBM-8QK6T</code><code>GSQ-9WQ4H-6ZRJC-3MSVN</code></div>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="2">
+                <header><i>03</i><b>密钥管理</b><span>管理端</span></header>
+                <div class="cine-shot">
+                  <div class="cine-rows">
+                    <span>GSQ-82K4-****-7F1A<em class="tag tag-ok">有效</em></span>
+                    <span>GSQ-39MN-****-8AB0<em class="tag tag-warn">冻结</em></span>
+                    <span>GSQ-14PL-****-9D3C<em class="tag tag-bad">吊销</em></span>
+                    <span>GSQ-77XT-****-4E62<em class="tag tag-dim">未使用</em></span>
+                  </div>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="3">
+                <header><i>04</i><b>离线激活</b><span>验证端</span></header>
+                <div class="cine-shot">
+                  <div class="cine-fingerprint"><i></i><span>8F3A1-0C4D9-7E2B5</span></div>
+                  <code class="cine-lic">LICACT1.eyJkZXYiOiI4RjNBMS…</code>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="4">
+                <header><i>05</i><b>告警中心</b><span>管理端</span></header>
+                <div class="cine-shot">
+                  <ul class="cine-alerts">
+                    <li><i></i>新硬件码抢占设备位<em>已冻结</em></li>
+                    <li><i></i>IP 网段跳变 3 次<em>邮件已发</em></li>
+                    <li><i></i>EXE 完整性不一致<em>已拒绝</em></li>
+                  </ul>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="5">
+                <header><i>06</i><b>邮箱账号</b><span>验证端</span></header>
+                <div class="cine-shot">
+                  <div class="cine-mail">
+                    <span>user@example.com</span>
+                    <em>绑定 GSQ-7K2MF-****-2HN8P</em>
+                    <div class="cine-mail-body">您的密钥将在 7 天后到期，请及时续费。<br />检测到异常登录，已临时冻结授权。</div>
+                  </div>
+                </div>
+              </article>
+              <article class="cine-card" data-slide="6">
+                <header><i>07</i><b>审计日志</b><span>管理端</span></header>
+                <div class="cine-shot">
+                  <ul class="cine-logs">
+                    <li><b>10:42</b> admin 吊销 GSQ-14PL-****-9D3C</li>
+                    <li><b>10:31</b> 风控冻结 GSQ-39MN-****-8AB0</li>
+                    <li><b>10:07</b> 邮件投递成功 user@example.com</li>
+                    <li><b>09:58</b> 登录成功 admin · 127.0.0.1</li>
+                  </ul>
+                </div>
+              </article>
+            </div>
+            <div class="cinema-hint" aria-hidden="true">拖拽 · 滑动 · 方向键</div>
+          </div>
+
+          <div class="cinema-ui">
+            <button class="cine-arrow" id="cine-prev" type="button" aria-label="上一屏">
+              <svg><use href="#i-chevron"></use></svg>
+            </button>
+            <div class="cine-dots" id="cine-dots"></div>
+            <button class="cine-arrow is-next" id="cine-next" type="button" aria-label="下一屏">
+              <svg><use href="#i-chevron"></use></svg>
+            </button>
+            <button class="cine-play" id="cine-play" type="button" aria-pressed="false">自动巡览</button>
+          </div>
+          <p class="cine-caption" id="cine-caption"></p>
+        </div>
+      </section>
+
+      <!-- 06 4D 授权链路调试器 -->
+      <section class="section section-alt" id="immersive">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">06</span>
+            <span class="dev-badge">开发中 · DEV</span>
+            <h2>4D 授权链路调试器</h2>
+            <p>
+              这一块不是为了好看：它把一次授权请求真正走过的路径摊开给你看。挑一个故障场景点「运行」，
+              光点会沿着链路走一遍，走到哪一步被拦、为什么被拦、触发了哪条告警、邮件发给了谁，
+              场景和右栏会同步告诉你。点任意节点还能看到它对应的职责与约束。
+            </p>
+          </header>
+        </div>
+
+        <div class="stage4d" id="stage4d">
+          <canvas id="gl-canvas" aria-hidden="true"></canvas>
+          <div class="stage4d-fallback" id="stage4d-fallback" hidden>
+            <p>当前浏览器没有可用的 WebGL，这一块会以静态背景呈现；页面其余交互不受影响。</p>
+          </div>
+
+          <div class="topo" id="topo">
+            <div class="topo-plane" id="topo-plane">
+              <svg class="topo-links" id="topo-links" viewBox="0 0 1000 460" preserveAspectRatio="none" aria-hidden="true"></svg>
+
+              <button class="topo-node" type="button" data-node="client" data-x="8" data-y="50">
+                <span class="topo-icon"><svg><use href="#i-monitor"></use></svg></span>
+                <b>客户端</b>
+                <em>验证端 / 管理端 / SDK</em>
+              </button>
+              <button class="topo-node" type="button" data-node="api" data-x="28" data-y="50">
+                <span class="topo-icon"><svg><use href="#i-server"></use></svg></span>
+                <b>本地服务器 API</b>
+                <em>签名校验 · 限流 · 78 接口</em>
+              </button>
+              <button class="topo-node" type="button" data-node="core" data-x="48" data-y="50">
+                <span class="topo-icon"><svg><use href="#i-db"></use></svg></span>
+                <b>授权内核</b>
+                <em>状态机 · 设备位 · 批次</em>
+              </button>
+              <button class="topo-node" type="button" data-node="risk" data-x="68" data-y="22">
+                <span class="topo-icon"><svg><use href="#i-shield"></use></svg></span>
+                <b>风控与完整性</b>
+                <em>硬件码 · IP 网段 · 哈希</em>
+              </button>
+              <button class="topo-node" type="button" data-node="notify" data-x="86" data-y="64">
+                <span class="topo-icon"><svg><use href="#i-bell"></use></svg></span>
+                <b>通知通道</b>
+                <em>邮件 · Webhook · 钉钉</em>
+              </button>
+            </div>
+          </div>
+
+          <div class="stage4d-hud">
+            <span class="hud-chip is-live" id="stage4d-mode">链路就绪</span>
+            <span class="hud-chip">拖动 · 转视角</span>
+            <span class="hud-chip">点节点 · 看职责</span>
+          </div>
+
+          <div class="stage4d-stats" aria-live="off">
+            <div><b id="stage4d-fps">--</b><span>FPS</span></div>
+            <div><b id="stage4d-nodes">5</b><span>链路节点</span></div>
+            <div><b id="stage4d-depth">0</b><span>已跑步骤</span></div>
+          </div>
+
+          <div class="topo-console">
+            <div class="console-head">
+              <strong>故障场景</strong>
+              <span class="console-status" id="topo-status">待运行</span>
+            </div>
+            <div class="scenario-row" id="topo-scenarios">
+              <button class="is-on" data-scenario="normal" type="button">正常激活</button>
+              <button data-scenario="expired" type="button">密钥已过期</button>
+              <button data-scenario="device" type="button">新硬件码抢占</button>
+              <button data-scenario="ip" type="button">IP 网段跳动</button>
+              <button data-scenario="tamper" type="button">发布文件被改</button>
+            </div>
+            <div class="console-controls">
+              <button class="mini is-primary" id="topo-run" type="button">运行整条链路</button>
+              <button class="mini" id="topo-step" type="button">单步</button>
+              <button class="mini" id="topo-reset" type="button">重置</button>
+            </div>
+            <ol class="console-log" id="topo-log" aria-live="polite">
+              <li class="is-hint">选一个场景，点「运行整条链路」看它怎么走；也可以「单步」一格一格看。</li>
+            </ol>
+          </div>
+
+          <aside class="topo-detail" id="topo-detail">
+            <span class="topo-detail-tag">节点详情</span>
+            <h3 id="topo-detail-title">点一个节点</h3>
+            <p id="topo-detail-body">场景里的每个方块都是真实存在的一层。点开它，可以看到这一层负责什么、会卡在哪里、对应哪些字段。</p>
+            <ul class="topo-detail-list" id="topo-detail-list"></ul>
+          </aside>
+        </div>
+
+        <div class="shell">
+          <div class="stage4d-notes" data-stagger>
+            <article>
+              <span class="note-no">01</span>
+              <h3>不是装饰，是调试器</h3>
+              <p>五个节点对应真实分层：客户端、API、授权内核、风控与完整性、通知通道；光点走的就是一次请求的真实顺序。</p>
+            </article>
+            <article>
+              <span class="note-no">02</span>
+              <h3>五种故障可复现</h3>
+              <p>正常激活、密钥过期、新硬件码抢占、IP 网段跳动、发布文件被改——每种都能看到卡在哪一步、结论是什么。</p>
+            </article>
+            <article>
+              <span class="note-no">03</span>
+              <h3>视角即操作</h3>
+              <p>拖动旋转链路、双指或滚轮推纵深、点节点看职责；离开视口或切到后台自动停止渲染，不吃你的电。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 07 安全体系 -->
+      <section class="section section-dark" id="security">
+        <div class="shell">
+          <div class="sec-head-row">
+            <header class="section-head light">
+              <span class="sec-no">07</span>
+              <h2>安全体系：三层裁决</h2>
+              <p>本地自检负责快速拒绝，发布白名单负责最终裁决，会话与传输负责全程防篡改。</p>
+            </header>
+            <div class="cube-stage" aria-hidden="true">
+              <div class="cube">
+                <div class="face f1"><svg><use href="#i-shield"></use></svg><span>L1 自校验</span></div>
+                <div class="face f2"><svg><use href="#i-lock"></use></svg><span>L2 attest</span></div>
+                <div class="face f3"><svg><use href="#i-key"></use></svg><span>L3 签名</span></div>
+                <div class="face f4"><svg><use href="#i-file"></use></svg><span>发布清单</span></div>
+                <div class="face f5"><svg><use href="#i-bell"></use></svg><span>告警</span></div>
+                <div class="face f6"><svg><use href="#i-db"></use></svg><span>审计</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="layer-stack" data-stagger>
+            <article class="layer">
+              <span class="layer-no">L1</span>
+              <h3>客户端自校验</h3>
+              <p>构建期生成 release_manifest.json 与 Ed25519 签名，逐文件记录 SHA-256 与大小，并绑定 release_id。</p>
+              <ul>
+                <li>EXE 自身哈希 / 大小与目录完整性校验</li>
+                <li>缺失、多出、改动文件一律拒绝启动</li>
+                <li>失败时弹窗 + 本地日志 + 上报服务端</li>
+              </ul>
+            </article>
+            <article class="layer">
+              <span class="layer-no">L2</span>
+              <h3>服务端 attest 白名单</h3>
+              <p>已发布版本进入 release_hashes / release_meta，attest 通过后签发短期 token。</p>
+              <ul>
+                <li>activate / verify / heartbeat 强制携带 X-Attest-Token</li>
+                <li>release_id 与 manifest 哈希一并校验，混用清单判 release_mismatch</li>
+                <li>attest_mode：auto（默认）/ strict / off</li>
+              </ul>
+            </article>
+            <article class="layer">
+              <span class="layer-no">L3</span>
+              <h3>会话与传输</h3>
+              <p>请求与响应双向签名，会话密钥加密落库，口令高成本哈希。</p>
+              <ul>
+                <li>HMAC-SHA256 覆盖方法 / 路径 / 查询串 / 时间戳 / nonce / 请求体摘要</li>
+                <li>Ed25519 响应签名固定公钥；会话密钥 AES-GCM 加密存储</li>
+                <li>PBKDF2-SHA256 600,000 次；远程部署要求 HTTPS</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="terminal">
+            <div class="terminal-bar"><span></span><span></span><span></span><em>attest 校验</em></div>
+            <pre><code><span class="tl"><span class="t-dim">POST</span> /api/client/attest</span>
+<span class="tl"><span class="t-dim">body</span> { release_id, manifest_sha256, exe_hash, machine_code }</span>
+<span class="tl">&nbsp;</span>
+<span class="tl"><span class="t-bad">403</span> 客户端完整性校验未通过，已拒绝访问</span>
+<span class="tl">     code = unknown_build | release_mismatch</span>
+<span class="tl">&nbsp;</span>
+<span class="tl"><span class="t-ok">→</span> 写入 tamper_events</span>
+<span class="tl"><span class="t-ok">→</span> 触发告警规则（完整性告警 ≥ 1）</span>
+<span class="tl"><span class="t-ok">→</span> 邮件 / Webhook / 钉钉 / 企微 / 飞书 通知</span></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 告警与通知 -->
+      <section class="section" id="alerts">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">08</span>
+            <h2>告警与通知</h2>
+            <p>把授权数据变成可执行的运营信号：阈值可配、事件可追踪、通知多渠道。</p>
+          </header>
+
+          <div class="alert-grid">
+            <div class="metric-table" data-stagger>
+              <div class="metric-head"><span>指标</span><span>口径</span></div>
+              <div class="metric-row"><b>激活率</b><span>窗口内创建的许可证中已激活占比</span></div>
+              <div class="metric-row"><b>在线并发</b><span>心跳时间窗内的活跃设备数</span></div>
+              <div class="metric-row"><b>过期率</b><span>窗口内到期许可证中已过期的占比</span></div>
+              <div class="metric-row"><b>7 天内到期</b><span>有效许可证即将到期的数量</span></div>
+              <div class="metric-row"><b>激活失败</b><span>窗口内「激活失败」审计记录数</span></div>
+              <div class="metric-row"><b>风控事件</b><span>窗口内新增风险事件数</span></div>
+              <div class="metric-row"><b>完整性告警</b><span>窗口内新增 tamper_events 数</span></div>
+            </div>
+
+            <div class="risk-col" data-stagger>
+              <article class="risk-card">
+                <svg><use href="#i-cpu"></use></svg>
+                <h3>新硬件码</h3>
+                <p>设备位已满仍出现新硬件码，判定为克隆或共用：直接封禁授权 + 高等级告警，主控可解封 / 换绑。</p>
+              </article>
+              <article class="risk-card">
+                <svg><use href="#i-globe"></use></svg>
+                <h3>IP 跳动</h3>
+                <p>同一密钥在时间窗内跨网段跳动，超过 2 次即自动发告警通知；窗口与阈值仍可在规则引擎里调整。</p>
+              </article>
+              <article class="risk-card">
+                <svg><use href="#i-shield"></use></svg>
+                <h3>完整性失败</h3>
+                <p>未知版本、清单不匹配、目录被改动，全部写入完整性告警并通知管理员与绑定邮箱。</p>
+              </article>
+            </div>
+          </div>
+
+          <div class="channel-row" data-stagger>
+            <div class="channel"><svg><use href="#i-mail"></use></svg><div><b>邮件</b><span>SMTP 队列 · 指数退避重试</span></div></div>
+            <div class="channel"><svg><use href="#i-plug"></use></svg><div><b>Webhook</b><span>JSON 回调 · X-SQ-Signature HMAC</span></div></div>
+            <div class="channel"><svg><use href="#i-bell"></use></svg><div><b>钉钉</b><span>Markdown 消息 · 官方加签</span></div></div>
+            <div class="channel"><svg><use href="#i-monitor"></use></svg><div><b>企业微信</b><span>Markdown 消息 · 错误码校验</span></div></div>
+            <div class="channel"><svg><use href="#i-chart"></use></svg><div><b>飞书</b><span>文本消息 · 时间戳加签</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 09 账号与用户 -->
+      <section class="section section-alt" id="accounts">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">09</span>
+            <h2>账号与用户</h2>
+            <p>管理员与终端用户各有一套账号体系：邮箱验证、密码找回、一人一号、资料与用户管理。</p>
+          </header>
+
+          <ol class="flow" data-stagger>
+            <li><span>01</span><b>注册</b><p>邮箱 + 验证码创建账号，邮箱即登录名。</p></li>
+            <li><span>02</span><b>登录</b><p>密码登录，支持记住账号 / 记住密码（DPAPI 加密）。</p></li>
+            <li><span>03</span><b>绑定密钥</b><p>一个邮箱同时绑定一个 Key，建立绑定历史。</p></li>
+            <li><span>04</span><b>激活设备</b><p>提交硬件码，事务内占用设备位，幂等不重复计数。</p></li>
+            <li><span>05</span><b>校验心跳</b><p>会话签名校验与抖动心跳，维持在线与授权状态。</p></li>
+            <li><span>06</span><b>续费 / 脱绑</b><p>发起续费请求；失效后可自助脱绑，有效期内需管理员处理。</p></li>
+          </ol>
+
+          <div class="two-col" data-stagger>
+            <article class="panel">
+              <h3>验证端资料</h3>
+              <ul class="ticks">
+                <li>显示名、头像（PNG / JPG / WebP，≤256KB）、邮箱</li>
+                <li>头像可上传 / 移除，加载失败回退默认图标</li>
+                <li>管理员邮箱支持验证码绑定与邮箱找回密码</li>
+              </ul>
+            </article>
+            <article class="panel">
+              <h3>用户管理</h3>
+              <ul class="ticks">
+                <li>按邮箱 / 显示名搜索，按状态筛选</li>
+                <li>查看绑定 Key、许可证状态、到期时间与最后登录</li>
+                <li>启用 / 禁用账号（禁用后旧令牌立即失效）</li>
+                <li>管理员强制脱绑，释放设备并写入历史</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10 部署与运维 -->
+      <section class="section" id="deploy">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">10</span>
+            <h2>部署与运维</h2>
+            <p>单机即可运行，也可放到服务器远程部署；运维有备份、有审计、有性能兜底。</p>
+          </header>
+
+          <div class="deploy-grid" data-stagger>
+            <article class="deploy-card">
+              <svg><use href="#i-server"></use></svg>
+              <h3>单机部署</h3>
+              <p>FastAPI + SQLite，默认监听 127.0.0.1:8765；无需额外数据库服务。</p>
+            </article>
+            <article class="deploy-card">
+              <svg><use href="#i-terminal"></use></svg>
+              <h3>免 Python</h3>
+              <p>四个程序均为 onefile 单文件 exe，Windows 10 / 11 双击即用。</p>
+            </article>
+            <article class="deploy-card">
+              <svg><use href="#i-db"></use></svg>
+              <h3>备份恢复</h3>
+              <p>一键备份数据库并做完整性校验，恢复前校验表结构，避免残缺文件覆盖线上库。</p>
+            </article>
+            <article class="deploy-card">
+              <svg><use href="#i-backup"></use></svg>
+              <h3>性能兜底</h3>
+              <p>统计结果缓存、过期扫描节流、热点索引、空队列不抢写锁，心跳高峰不卡顿。</p>
+            </article>
+            <article class="deploy-card">
+              <svg><use href="#i-lock"></use></svg>
+              <h3>远程部署</h3>
+              <p>远程部署必须使用 HTTPS 并固定服务端响应公钥；明文 HTTP 会被客户端拒绝。</p>
+            </article>
+            <article class="deploy-card">
+              <svg><use href="#i-file"></use></svg>
+              <h3>发布规范</h3>
+              <p>构建产物 release_package 只含 exe + 清单 + 签名，自动做卫生检查，防止密钥 / 数据库外泄。</p>
+            </article>
+          </div>
+
+          <div class="phase-note">
+            <svg><use href="#i-alert"></use></svg>
+            <div>
+              <b>当前处于测试与调试阶段</b>
+              <p>请勿直接替换现有生产环境的授权服务：先在独立环境跑通升级与回滚，再按 release_package 流程发布。</p>
+            </div>
+          </div>
+
+          <div class="code-block">
+            <div class="code-head">
+              <span>命令行</span>
+              <button class="copy" data-copy="python server/main.py --headless">复制</button>
+            </div>
+            <pre><code># 无界面启动本地服务器
+python server/main.py --headless
+
+# 导出客户端需要固定的服务端公钥
+python server/main.py --print-public-key
+
+# 忘记主控密码（保留全部授权数据）
+python server/main.py --reset-master-password</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11 接入与扩展 -->
+      <section class="section section-dark" id="integration">
+        <div class="shell">
+          <header class="section-head light">
+            <span class="sec-no">11</span>
+            <h2>接入与扩展</h2>
+            <p>REST 接口就是协议边界；Python SDK 可直接嵌入第三方软件。</p>
+          </header>
+
+          <div class="api-grid">
+            <div class="api-list" data-stagger>
+              <div class="api-row"><b>POST</b><code>/api/client/activate</code><span>设备激活与席位占用</span></div>
+              <div class="api-row"><b>POST</b><code>/api/client/verify</code><span>会话签名校验</span></div>
+              <div class="api-row"><b>POST</b><code>/api/client/heartbeat</code><span>心跳与在线口径</span></div>
+              <div class="api-row"><b>POST</b><code>/api/portal/login</code><span>邮箱账号登录</span></div>
+              <div class="api-row"><b>POST</b><code>/api/alerts/rules</code><span>配置告警规则</span></div>
+              <div class="api-row"><b>POST</b><code>/api/channels</code><span>配置通知渠道</span></div>
+              <div class="api-row"><b>POST</b><code>/api/release/import</code><span>导入发布白名单</span></div>
+              <div class="api-row"><b>GET</b><code>/api/email/outbox</code><span>邮件投递记录</span></div>
+            </div>
+
+            <div class="code-block on-dark">
+              <div class="code-head">
+                <span>Python SDK · sdk.LicenseClient</span>
+                <button class="copy" data-copy="from sdk import LicenseClient
+
+client = LicenseClient(
+    'https://license.example.com',
+    RESPONSE_PUBLIC_KEY,
+)
+result = client.activate('GSQ-XXXXX-XXXXX-XXXXX-XXXXX')
+if result.get('ok'):
+    print(result['remaining'])
+">复制</button>
+              </div>
+              <pre><code>from sdk import LicenseClient
+
+client = LicenseClient(
+    "https://license.example.com",
+    RESPONSE_PUBLIC_KEY,      # 服务端响应公钥，固定写死
+)
+
+result = client.activate("GSQ-XXXXX-XXXXX-XXXXX-XXXXX")
+print(result["ok"], result["remaining"])
+
+<span class="t-dim"># 自动心跳与请求签名由 SDK 处理；</span>
+<span class="t-dim"># 离线码可用 client.verify_offline(code) 校验。</span></code></pre>
+            </div>
+          </div>
+
+          <div class="switch-row" data-stagger>
+            <div><code>attest_mode</code><span>auto / strict / off</span></div>
+            <div><code>sdk_attest_exempt</code><span>SDK 宿主白名单豁免开关</span></div>
+            <div><code>require_manifest_hash</code><span>强制校验 manifest 哈希</span></div>
+            <div><code>channel_allow_private_hosts</code><span>允许内网通知地址</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12 常见问题 -->
+      <section class="section" id="faq">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">12</span>
+            <h2>常见问题</h2>
+            <p>部署与使用中最常被问到的几个问题。</p>
+          </header>
+
+          <div class="faq" data-stagger>
+            <details>
+              <summary>现在是测试与调试阶段，能直接用于正式环境吗？</summary>
+              <p>当前版本处于测试与调试阶段：授权核心流程可用，但界面、接口字段与性能仍在联调。建议先在测试机跑通完整流程，正式发布时使用构建生成的 release_package，并保留回滚方案。</p>
+            </details>
+            <details>
+              <summary>运行 exe 需要安装 Python 吗？</summary>
+              <p>不需要。四个程序均为 onefile 单文件打包，双击即可运行。</p>
+            </details>
+            <details>
+              <summary>忘记主控密码怎么办？</summary>
+              <p>不要删除数据库。停止服务器后执行 <code>本地服务器.exe --reset-master-password</code>，会为 admin 重新生成一次性密码并保留全部授权数据，登录后需立即改密。</p>
+            </details>
+            <details>
+              <summary>可以放到服务器上远程部署吗？</summary>
+              <p>可以，但必须配置 HTTPS / 受信证书，并把 <code>--print-public-key</code> 导出的服务端响应公钥固定到客户端配置；明文 HTTP 会被客户端拒绝。</p>
+            </details>
+            <details>
+              <summary>验证端提示连接失败？</summary>
+              <p>确认本地服务器已启动、8765 端口未被占用且未被防火墙拦截；远程地址需勾选允许连接受信 HTTPS 服务端。</p>
+            </details>
+            <details>
+              <summary>第三方软件能不能内嵌授权校验？</summary>
+              <p>可以。使用 <code>sdk.LicenseClient</code>，把 <code>core/</code> 与 <code>sdk/</code> 随程序分发即可；SDK 不读取配置文件、不依赖发布清单，响应验签与设备绑定仍然生效。</p>
+            </details>
+            <details>
+              <summary>发布文件怎么对外分发？</summary>
+              <p>只分发构建生成的 <code>release_package</code> 目录（四个 exe + release_manifest.json + 签名 + releases 副本）。不要分发整个 dist，避免把配置或数据库带出去。</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13 作者 -->
+      <section class="section section-alt" id="author">
+        <div class="shell">
+          <header class="section-head">
+            <span class="sec-no">13</span>
+            <h2>作者与项目</h2>
+            <p>从授权内核到四个客户端界面，由一个人从头写到尾：没有外包、没有拼装框架，逻辑与界面同源。</p>
+          </header>
+
+          <div class="author-grid">
+            <article class="author-card">
+              <div class="author-head">
+                <span class="author-avatar" aria-hidden="true">SQ</span>
+                <div>
+                  <h3>苏丠</h3>
+                  <p>独立开发者 · 设计与实现同一个人</p>
+                </div>
+              </div>
+              <p class="author-bio">
+                负责 SQ 密钥授权系统的全部工作：授权内核、四端 PySide6 界面、离线激活签名链、
+                告警规则引擎、邮件队列、审计与备份，以及你现在看到的这个宣传站。
+                偏好把复杂链路拆成可验证的小闭环，先能跑通，再谈好看。
+              </p>
+              <ul class="author-tags">
+                <li>Python</li>
+                <li>FastAPI</li>
+                <li>PySide6</li>
+                <li>SQLite</li>
+                <li>Ed25519</li>
+                <li>HMAC-SHA256</li>
+                <li>AES-GCM</li>
+                <li>PyInstaller</li>
+                <li>原生 JS</li>
+                <li>Canvas 2D</li>
+              </ul>
+              <div class="author-foot">
+                <span>版权所有 © 2026 苏丠</span>
+                <span>保留所有权利</span>
+              </div>
+            </article>
+
+            <div class="author-facts">
+              <div class="author-stat-row">
+                <div><b data-author-count="4">0</b><span>独立程序</span></div>
+                <div><b data-author-count="78">0</b><span>REST 接口</span></div>
+                <div><b data-author-count="7">0</b><span>告警指标</span></div>
+                <div><b data-author-count="3">0</b><span>完整性层</span></div>
+              </div>
+              <ol class="author-timeline">
+                <li>
+                  <i>01</i>
+                  <div><b>授权内核</b><span>密钥生命周期、设备绑定、心跳续期、批次吊销与恢复，单机 SQLite 落地。</span></div>
+                </li>
+                <li>
+                  <i>02</i>
+                  <div><b>四端程序</b><span>管理端 / 验证端 / 服务器 / 工具端，onefile 打包，双击即用，不依赖 Python 环境。</span></div>
+                </li>
+                <li>
+                  <i>03</i>
+                  <div><b>安全链路</b><span>HMAC-SHA256 请求签名、Ed25519 响应与离线激活验签、PBKDF2 60 万次口令派生。</span></div>
+                </li>
+                <li>
+                  <i>04</i>
+                  <div><b>运营闭环</b><span>邮箱账号、阈值告警、风控冻结、邮件队列与退避重试、多渠道通知与审计留痕。</span></div>
+                </li>
+              </ol>
+              <p class="author-note">
+                项目当前处于测试与调试阶段，接口字段与界面仍在联调；正式发布时请以构建生成的
+                <code>release_package</code> 为准。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-band" id="get">
+        <div class="shell cta-inner">
+          <h2>把授权链路握在自己手里。</h2>
+          <p>单机部署、离线可用、客户端可自校验；异常有告警，操作有审计。</p>
+          <div class="hero-actions">
+            <a class="btn btn-light btn-lg" href="#deploy">查看部署方式</a>
+            <a class="btn btn-ghost-light btn-lg" href="mailto:2376990248@qq.com">邮件联系</a>
+          </div>
+        </div>
+
+        <div class="shell contact-card" id="contact">
+          <div class="contact-head">
+            <span class="contact-tag">测试请联系</span>
+            <h3>想试用、想定制、想报 Bug，直接发邮件。</h3>
+          </div>
+          <div class="contact-row">
+            <a class="contact-mail" href="mailto:2376990248@qq.com">
+              <span class="contact-icon" aria-hidden="true">
+                <svg><use href="#i-mail"></use></svg>
+              </span>
+              <span class="contact-text">
+                <b>2376990248@qq.com</b>
+                <small>QQ 邮箱 · 工作日 24 小时内回复</small>
+              </span>
+            </a>
+            <div class="contact-actions">
+              <button class="copy contact-copy" id="contact-copy" type="button" data-copy="2376990248@qq.com">复制邮箱</button>
+              <a class="btn btn-ghost-light" href="mailto:2376990248@qq.com?subject=SQ%20%E5%AF%86%E9%92%A5%E6%8E%88%E6%9D%83%E7%B3%BB%E7%BB%9F%20%C2%B7%20%E6%B5%8B%E8%AF%95%E7%94%B3%E8%AF%B7">发送申请邮件</a>
+            </div>
+          </div>
+          <p class="contact-note">
+            当前处于测试与调试阶段，欢迎索取测试版本、反馈缺陷或聊定制需求。
+            邮件里请不要附真实授权数据、密钥或数据库文件。
+          </p>
+        </div>
+
+        <div class="cta-marquee" aria-hidden="true">
+          <div class="marquee-track reverse">
+            <div class="marquee-group">
+              <span>单机部署 · SQLite</span>
+              <span>HMAC-SHA256 请求签名</span>
+              <span>Ed25519 响应验签</span>
+              <span>attest 发布白名单</span>
+              <span>7 类告警指标</span>
+              <span>5 种通知渠道</span>
+              <span>邮箱账号登录</span>
+              <span>离线激活</span>
+              <span>审计与备份</span>
+              <span>Python SDK</span>
+            </div>
+            <div class="marquee-group">
+              <span>单机部署 · SQLite</span>
+              <span>HMAC-SHA256 请求签名</span>
+              <span>Ed25519 响应验签</span>
+              <span>attest 发布白名单</span>
+              <span>7 类告警指标</span>
+              <span>5 种通知渠道</span>
+              <span>邮箱账号登录</span>
+              <span>离线激活</span>
+              <span>审计与备份</span>
+              <span>Python SDK</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="shell footer-row">
+        <div class="footer-brand">
+          <img src="./assets/logo.svg" alt="" width="36" height="36" />
+          <div>
+            <strong>SQ 密钥授权系统</strong>
+            <span>v1.0.0 · 软件授权与卡密管理平台</span>
+          </div>
+        </div>
+        <p>
+          测试请联系 <a class="footer-mail" href="mailto:2376990248@qq.com">2376990248@qq.com</a>
+          · 本页为产品宣传页，不包含授权数据 · 版权所有 © 2026 苏丠，保留所有权利。
+        </p>
+      </div>
+    </footer>
+
+    <div class="hud" aria-hidden="true">
+      <span class="hud-logo">SQ</span>
+      <span class="hud-text">DEV BUILD · v1.0.0</span>
+      <span class="hud-dot"></span>
+    </div>
+
+    <button class="to-top" id="to-top" type="button" aria-label="回到顶部">
+      <svg><use href="#i-arrow"></use></svg>
+    </button>
+
+    <canvas class="click-canvas" id="click-canvas" aria-hidden="true"></canvas>
+    <div class="cursor-halo" id="cursor-halo" aria-hidden="true"></div>
+    <div class="toast-layer" id="toast-layer" role="status" aria-live="polite"></div>
+
+    <div class="studio-modal" id="studio-modal" hidden>
+      <div class="studio-modal-mask" data-modal-close></div>
+      <div class="studio-modal-card" role="dialog" aria-modal="true" aria-labelledby="studio-modal-title">
+        <h4 id="studio-modal-title">确认操作</h4>
+        <p id="studio-modal-text">操作说明</p>
+        <div class="studio-modal-actions">
+          <button class="btn btn-line" data-modal-close type="button">取消</button>
+          <button class="btn btn-accent" id="studio-modal-ok" type="button">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
